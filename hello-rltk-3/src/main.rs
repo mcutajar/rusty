@@ -63,7 +63,9 @@ fn main() -> rltk::BError {
     use rltk::RltkBuilder;
     let context = RltkBuilder::simple80x50()
         .with_title("Roguelike Tutorial")
+        .with_fps_cap(10.0)
         .build()?;
+    
     let mut gs = State {
         ecs: World::new()
     };
