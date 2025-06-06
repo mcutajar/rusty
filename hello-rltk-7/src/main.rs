@@ -8,6 +8,9 @@ pub use map::*;
 mod player;
 use player::*;
 
+mod rect;
+use rect::*;
+
 
 struct State {
     ecs: World,
@@ -54,7 +57,7 @@ fn main() -> rltk::BError {
         .with(Player {})
         .build();
 
-    gs.ecs.insert(new_map());
+    gs.ecs.insert(new_map_rooms_and_corridors());
 
     rltk::main_loop(context, gs)
 }
