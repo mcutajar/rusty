@@ -14,16 +14,27 @@ pub use visibility_system::*;
 
 use rect::*;
 
-struct State {
-    ecs: World,
+#[derive(PartialEq, Copy, Clone)]
+pub enum RunState {
+    Paused,
+    Running,
+}
+
+pub struct State {
+    pub ecs: World,
+    pub runstate : RunState
 }
 
 impl GameState for State {
     fn tick(&mut self, ctx: &mut Rltk) {
         ctx.cls();
 
-        self.run_systems();
-        player_input(self, ctx);
+        if self.runstate == RunState::Running {
+            self.run_systems();
+            self.runstate = RunState::Paused;
+        } else {
+            self.runstate = player_input(self, ctx);
+        }
 
         draw_map(&self.ecs, ctx);
 
@@ -48,10 +59,14 @@ fn main() -> rltk::BError {
     use rltk::RltkBuilder;
     let context = RltkBuilder::simple80x50()
         .with_title("Roguelike Tutorial")
-        .with_fps_cap(10.0)
+        //.with_fps_cap(10.0)
         .build()?;
 
-    let mut gs = State { ecs: World::new() };
+    let mut gs = State {
+        ecs: World::new(),
+        runstate : RunState::Running
+    };
+    
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();
     gs.ecs.register::<Player>();
