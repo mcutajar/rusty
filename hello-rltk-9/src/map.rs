@@ -1,4 +1,4 @@
-use rltk::{ RGB, Rltk };
+use rltk::{RGB, Rltk, RandomNumberGenerator};
 use super::{Rect};
 use std::cmp::{max, min};
 
@@ -54,13 +54,28 @@ fn apply_room_to_map(room : &Rect, map: &mut [TileType]) {
 pub fn new_map_rooms_and_corridors() -> Vec<TileType> {
     let mut map = vec![TileType::Wall; 80*50];
 
-    let room1 = Rect::new(20, 15, 10, 15);
-    let room2 = Rect::new(35, 15, 10, 15);
+    let mut rooms : Vec<Rect> = Vec::new();
+    const MAX_ROOMS : i32 = 30;
+    const MIN_SIZE : i32 = 6;
+    const MAX_SIZE : i32 = 10;
 
-    apply_room_to_map(&room1, &mut map);
-    apply_room_to_map(&room2, &mut map);
+    let mut rng = RandomNumberGenerator::new();
 
-    apply_horizontal_tunnel(&mut map, 25, 40, 23);
+    for _ in 0..MAX_ROOMS {
+        let w = rng.range(MIN_SIZE, MAX_SIZE);
+        let h = rng.range(MIN_SIZE, MAX_SIZE);
+        let x = rng.roll_dice(1, 80 - w - 1) - 1;
+        let y = rng.roll_dice(1, 50 - h - 1) - 1;
+        let new_room = Rect::new(x, y, w, h);
+        let mut ok = true;
+        for other_room in rooms.iter() {
+            if new_room.intersect(other_room) { ok = false }
+        }
+        if ok {
+            apply_room_to_map(&new_room, &mut map);
+            rooms.push(new_room);
+        }
+    }
 
     map
 }
@@ -75,7 +90,7 @@ pub fn draw_map(map: &[TileType], ctx: &mut Rltk) {
                 ctx.set(
                     x,
                     y,
-                    RGB::from_f32(0.5, 0.5, 0.5),
+                    RGB::from_f32(0.25, 0.25, 0.25),
                     RGB::from_f32(0., 0., 0.),
                     rltk::to_cp437('.'),
                 );
@@ -84,7 +99,7 @@ pub fn draw_map(map: &[TileType], ctx: &mut Rltk) {
                 ctx.set(
                     x,
                     y,
-                    RGB::from_f32(0.0, 1.0, 0.0),
+                    RGB::from_f32(0.75, 0.75, 0.75),
                     RGB::from_f32(0., 0., 0.),
                     rltk::to_cp437('#'),
                 );
@@ -100,7 +115,7 @@ pub fn draw_map(map: &[TileType], ctx: &mut Rltk) {
     }
 }
 
-fn apply_horizontal_tunnel(map: &mut [TileType], x1:i32, x2:i32, y:i32) {
+fn _apply_horizontal_tunnel(map: &mut [TileType], x1:i32, x2:i32, y:i32) {
     for x in min(x1,x2) ..= max(x1,x2) {
         let idx = xy_idx(x, y);
         if idx > 0 && idx < 80*50 {
