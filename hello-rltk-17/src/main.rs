@@ -1,4 +1,4 @@
-use rltk::{GameState, RGB, Rltk};
+use rltk::{GameState, Point, RGB, Rltk};
 use specs::prelude::*;
 
 mod components;
@@ -83,7 +83,7 @@ fn main() -> rltk::BError {
     gs.ecs.register::<Monster>();
 
     let map: Map = Map::new_map_rooms_and_corridors();
-    
+
     //add player
     let (player_x, player_y) = map.rooms[0].center();
     gs.ecs
@@ -104,6 +104,7 @@ fn main() -> rltk::BError {
             dirty: true,
         })
         .build();
+    gs.ecs.insert(Point::new(player_x, player_y));
 
     //add monsters
     let mut rng = rltk::RandomNumberGenerator::new();
