@@ -8,8 +8,11 @@ pub use map::*;
 mod player;
 use player::*;
 
+mod monster_ai_system;
 mod rect;
 mod visibility_system;
+use monster_ai_system::*;
+
 pub use visibility_system::*;
 
 use rect::*;
@@ -44,7 +47,9 @@ impl GameState for State {
 
         for (pos, render) in (&positions, &renderables).join() {
             let idx = map.xy_idx(pos.x, pos.y);
-            if map.visible_tiles[idx] { ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph) }
+            if map.visible_tiles[idx] {
+                ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph)
+            }
         }
     }
 }
@@ -53,6 +58,8 @@ impl State {
     fn run_systems(&mut self) {
         let mut vis = VisibilitySystem {};
         vis.run_now(&self.ecs);
+        let mut mob = MonsterAI {};
+        mob.run_now(&self.ecs);
         self.ecs.maintain();
     }
 }
@@ -73,35 +80,12 @@ fn main() -> rltk::BError {
     gs.ecs.register::<Renderable>();
     gs.ecs.register::<Player>();
     gs.ecs.register::<Viewshed>();
-    
+    gs.ecs.register::<Monster>();
+
     let map: Map = Map::new_map_rooms_and_corridors();
+    
     //add player
     let (player_x, player_y) = map.rooms[0].center();
-    //add monsters
-    let mut rng = rltk::RandomNumberGenerator::new();
-    for room in map.rooms.iter().skip(1) {
-        let (x,y) = room.center();
-
-        let glyph : rltk::FontCharType;
-        let roll = rng.roll_dice(1, 2);
-        match roll {
-            1 => { glyph = rltk::to_cp437('g') }
-            _ => { glyph = rltk::to_cp437('o') }
-        }
-
-        gs.ecs.create_entity()
-            .with(Position{ x, y })
-            .with(Renderable{
-                glyph: glyph,
-                fg: RGB::named(rltk::RED),
-                bg: RGB::named(rltk::BLACK),
-            })
-            .with(Viewshed{ visible_tiles : Vec::new(), range: 8, dirty: true })
-            .build();
-    }
-
-    gs.ecs.insert(map);
-
     gs.ecs
         .create_entity()
         .with(Position {
@@ -120,6 +104,37 @@ fn main() -> rltk::BError {
             dirty: true,
         })
         .build();
+
+    //add monsters
+    let mut rng = rltk::RandomNumberGenerator::new();
+    for room in map.rooms.iter().skip(1) {
+        let (x, y) = room.center();
+
+        let glyph: rltk::FontCharType;
+        let roll = rng.roll_dice(1, 2);
+        match roll {
+            1 => glyph = rltk::to_cp437('g'),
+            _ => glyph = rltk::to_cp437('o'),
+        }
+
+        gs.ecs
+            .create_entity()
+            .with(Position { x, y })
+            .with(Renderable {
+                glyph: glyph,
+                fg: RGB::named(rltk::RED),
+                bg: RGB::named(rltk::BLACK),
+            })
+            .with(Viewshed {
+                visible_tiles: Vec::new(),
+                range: 8,
+                dirty: true,
+            })
+            .with(Monster {})
+            .build();
+    }
+
+    gs.ecs.insert(map);
 
     rltk::main_loop(context, gs)
 }
