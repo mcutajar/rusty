@@ -1,5 +1,6 @@
 use rltk::{ RGB, Rltk };
 use super::{Rect};
+use std::cmp::{max, min};
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum TileType {
@@ -59,6 +60,8 @@ pub fn new_map_rooms_and_corridors() -> Vec<TileType> {
     apply_room_to_map(&room1, &mut map);
     apply_room_to_map(&room2, &mut map);
 
+    apply_horizontal_tunnel(&mut map, 25, 40, 23);
+
     map
 }
 
@@ -93,6 +96,15 @@ pub fn draw_map(map: &[TileType], ctx: &mut Rltk) {
         if x > 79 {
             x = 0;
             y += 1;
+        }
+    }
+}
+
+fn apply_horizontal_tunnel(map: &mut [TileType], x1:i32, x2:i32, y:i32) {
+    for x in min(x1,x2) ..= max(x1,x2) {
+        let idx = xy_idx(x, y);
+        if idx > 0 && idx < 80*50 {
+            map[idx as usize] = TileType::Floor;
         }
     }
 }
