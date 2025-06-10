@@ -90,6 +90,7 @@ fn main() -> rltk::BError {
     gs.ecs.register::<Player>();
     gs.ecs.register::<Monster>();
     gs.ecs.register::<BlocksTile>();
+    gs.ecs.register::<Perception>();
 
     let map: Map = Map::new_map_rooms_and_corridors();
 
@@ -109,9 +110,10 @@ fn main() -> rltk::BError {
         .with(Player {})
         .with(Viewshed {
             visible_tiles: Vec::new(),
-            range: 8,
+            range: 5,
             dirty: true,
         })
+        .with(Perception{value: 2})
         .with(Name {
             name: "Player".to_string(),
         })
@@ -147,7 +149,7 @@ fn main() -> rltk::BError {
             })
             .with(Viewshed {
                 visible_tiles: Vec::new(),
-                range: 8,
+                range: 5,
                 dirty: true,
             })
             .with(Monster {})
@@ -155,6 +157,7 @@ fn main() -> rltk::BError {
                 name: format!("{} #{}", &name, i),
             })
             .with(BlocksTile {})
+            .with(Perception {value: -2})
             .build();
     }
 

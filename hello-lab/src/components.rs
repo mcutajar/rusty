@@ -35,3 +35,8 @@ pub struct Viewshed {
 
 #[derive(Component, Debug)]
 pub struct BlocksTile {}
+
+#[derive(Component)]
+pub struct Perception {
+    pub value: i8,
+}
